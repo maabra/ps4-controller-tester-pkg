@@ -23,11 +23,21 @@ jobs:
           find /tmp/sdl2 -name libSDL2.a -exec cp {} third_party/SDL-PS4/lib/ \;
           test -f third_party/SDL-PS4/lib/libSDL2.a
 
+      - name: Build create-gp4 tool
+        shell: bash
+        run: |
+          mkdir -p /tmp/create-gp4-src
+          curl -fsSL https://github.com/OpenOrbis/create-gp4/archive/refs/heads/master.tar.gz \
+            | tar -xz -C /tmp/create-gp4-src --strip-components=1
+          (cd /tmp/create-gp4-src/cmd/create-gp4 && go build -o /tmp/create-gp4 .)
+          chmod +x /tmp/create-gp4
+
       - name: Build package
         run: |
           docker run --rm \
             -w /workspace \
             -v "${GITHUB_WORKSPACE}:/workspace" \
+            -v /tmp/create-gp4:/lib/OpenOrbisSDK/bin/linux/create-gp4:ro \
             openorbisofficial/toolchain:latest make pkg
 
       - name: Upload package
