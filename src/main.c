@@ -4,6 +4,7 @@
 
 #include <orbis/Pad.h>
 #include <orbis/libkernel.h>
+#include <stddef.h>
 #include <stdint.h>
 
 static int pad_handles[CONTROLLER_SLOTS] = {-1, -1, -1, -1};
