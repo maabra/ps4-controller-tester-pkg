@@ -19,9 +19,12 @@ jobs:
           curl -fsSL https://github.com/OpenOrbis/SDL-PS4/releases/latest/download/SDL2.tar.gz \
             | tar -xz -C /tmp/sdl2
           mkdir -p third_party/SDL-PS4/include third_party/SDL-PS4/lib
-          cp -r /tmp/sdl2/include/. third_party/SDL-PS4/include/
-          find /tmp/sdl2 -name libSDL2.a -exec cp {} third_party/SDL-PS4/lib/ \;
-          test -f third_party/SDL-PS4/lib/libSDL2.a
+          sdl_include=$(dirname "$(find /tmp/sdl2 -type f -name SDL.h -print -quit)")
+          sdl_library=$(find /tmp/sdl2 -type f -name libSDL2.a -print -quit)
+          test -n "$sdl_include" && test -f "$sdl_include/SDL.h"
+          test -n "$sdl_library" && test -f "$sdl_library"
+          cp -r "$sdl_include"/. third_party/SDL-PS4/include/
+          cp "$sdl_library" third_party/SDL-PS4/lib/libSDL2.a
 
       - name: Build create-gp4 tool
         shell: bash
