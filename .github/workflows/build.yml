@@ -29,10 +29,12 @@ jobs:
       - name: Build OpenOrbis packaging tools
         shell: bash
         run: |
-          mkdir -p /tmp/create-fself-src
-          curl -fsSL https://github.com/OpenOrbis/create-fself/archive/refs/heads/master.tar.gz \
-            | tar -xz -C /tmp/create-fself-src --strip-components=1
-          (cd /tmp/create-fself-src/cmd/create-fself && go build -o /tmp/create-fself .)
+          mkdir -p /tmp/create-fself-bin
+          curl -fsSL https://github.com/OpenOrbis/create-fself/releases/download/v1.3/binaries.tar.gz \
+            | tar -xz -C /tmp/create-fself-bin
+          fself=$(find /tmp/create-fself-bin -type f -name create-fself -print -quit)
+          test -n "$fself" && test -f "$fself"
+          cp "$fself" /tmp/create-fself
           chmod +x /tmp/create-fself
 
           mkdir -p /tmp/create-gp4-src
