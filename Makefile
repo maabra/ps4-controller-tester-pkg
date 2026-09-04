@@ -42,7 +42,7 @@ sdl-check:
 	@test -f "$(SDL_LIB)" || { echo "Missing $(SDL_LIB); build or install SDL2-PS4 before running make"; exit 1; }
 
 $(OUT)/eboot.bin: $(OUT)/PS4ControllerTester.elf
-	$(CREATE_EBOOT) -in=$< -out=$(OUT)/PS4ControllerTester.oelf --eboot "$@" --paid 0x3800000000000011
+	$(CREATE_EBOOT) -in=$< -out=$@ -ptype=fake -paid 0x3800000000000011
 
 
 $(OUT)/sce_sys/param.sfo: param.sfo.in | $(OUT) tools-check
