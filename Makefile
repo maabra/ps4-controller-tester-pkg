@@ -61,7 +61,7 @@ $(OUT)/PS4ControllerTester.elf: sdl-check $(OBJECTS)
 	$(LD) $(OBJECTS) $(SDK)/lib/crt1.o -o $@ $(LDFLAGS) $(LDLIBS)
 
 $(OUT)/PS4ControllerTester.gp4: $(OUT)/eboot.bin $(OUT)/sce_sys/param.sfo
-	cd $(OUT) && $(CREATE_GP4) -out PS4ControllerTester.gp4 --content-id=IV0000-CTST00001_00-PS4TESTER0000000 --files eboot.bin sce_sys/param.sfo
+	cd $(OUT) && $(CREATE_GP4) -out PS4ControllerTester.gp4 --content-id=IV0000-CTST00001_00-PS4TESTER0000000 --files "eboot.bin sce_sys/param.sfo"
 
 pkg: tools-check sdl-check $(OUT)/PS4ControllerTester.gp4
 	$(PKG_TOOL) pkg_build $(OUT)/PS4ControllerTester.gp4 $(OUT)
