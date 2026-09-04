@@ -1,6 +1,8 @@
 #include "renderer.h"
 
 #include <SDL.h>
+#include <orbis/Pad.h>
+#include <stddef.h>
 
 #define UI_WIDTH 1280
 #define UI_HEIGHT 720
@@ -23,7 +25,7 @@ static const uint8_t font[37][7] = {
     {0,14,17,1,14,16,31},{0,14,17,23,25,17,14},{0,30,17,30,17,17,30},
     {0,14,16,16,16,16,14},{0,30,17,17,17,17,30},{0,31,16,30,16,16,31},
     {0,14,16,22,17,17,15},{0,17,17,31,17,17,17},{0,31,4,4,4,4,31},
-    {0,1,1,1,1,17,14},{0,17,18,28,18,17,17},{0,16,16,16,16,16,31}
+    {0,1,1,1,1,17,14}
 };
 
 static int glyph_index(char character) {
@@ -57,7 +59,7 @@ static void bar(int x, int y, int width, int value, SDL_Color color) {
     SDL_RenderFillRect(renderer, &fill);
 }
 
-static void stick(int x, int y, uint8_t axis_x, uint8_t axis_y) {
+static void draw_stick(int x, int y, uint8_t axis_x, uint8_t axis_y) {
     SDL_SetRenderDrawColor(renderer, 34, 47, 62, 255);
     SDL_RenderDrawLine(renderer, x - 42, y, x + 42, y);
     SDL_RenderDrawLine(renderer, x, y - 42, x, y + 42);
@@ -116,8 +118,8 @@ void renderer_draw(const controller_state_t *states,
              state->connected ? green : muted);
         text("L STICK", x + 22, y + 89, 1, muted);
         text("R STICK", x + 150, y + 89, 1, muted);
-        stick(x + 52, y + 140, state->left_x, state->left_y);
-        stick(x + 180, y + 140, state->right_x, state->right_y);
+        draw_stick(x + 52, y + 140, state->left_x, state->left_y);
+        draw_stick(x + 180, y + 140, state->right_x, state->right_y);
         text("L2", x + 270, y + 90, 1, muted);
         text("R2", x + 270, y + 141, 1, muted);
         bar(x + 310, y + 91, 150, state->l2, orange);

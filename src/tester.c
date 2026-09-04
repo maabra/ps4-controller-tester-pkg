@@ -1,6 +1,7 @@
 #include "tester.h"
 
 #include <orbis/Pad.h>
+#include <stddef.h>
 
 int tester_axis_is_centered(uint8_t value) {
     return value >= 120 && value <= 136;
