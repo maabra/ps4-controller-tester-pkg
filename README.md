@@ -13,24 +13,29 @@ state through the public homebrew pad interface.
 - Per-controller battery and connection metadata when exposed by the SDK
 - Four controllers at the same time
 
-The diagnostic model is deliberately simple: each controller gets a stable
-slot and sampled state, ready for a fullscreen framebuffer or SDL-PS4 view.
-The current source focuses on the firmware-facing pad backend; the renderer
-must be linked from the graphics layer selected for your OpenOrbis toolchain.
+The app opens a fullscreen 1280x720 logical canvas and scales it to the PS4
+output. It shows four stable controller panels with connection status, both
+stick positions, L2/R2 pressure bars, face-button indicators, and a live drift
+check. A small built-in bitmap font keeps the UI self-contained.
 
 ## Build
 
 This repository contains the app source and packaging recipe, not a bundled
-Sony SDK or a pre-signed package. Install the OpenOrbis toolchain separately
-and provide its path through `OPENORBIS_ROOT`.
+Sony SDK or a pre-signed package. Use the official OpenOrbis toolchain
+container and provide a built SDL2-PS4 library under `third_party/SDL-PS4`.
 
 From a shell with Docker available:
 
 ```powershell
-$env:OPENORBIS_ROOT = 'C:\path\to\OpenOrbis-Toolchain'
-docker build -t ps4-controller-tester-build .
-docker run --rm -v "${PWD}:/src" -v "${env:OPENORBIS_ROOT}:/opt/OpenOrbis:ro" ps4-controller-tester-build pkg
+docker pull openorbisofficial/toolchain:latest
+docker run --rm -w /workspace -v "${PWD}:/workspace" openorbisofficial/toolchain:latest make pkg
 ```
+
+On Windows, the local prerequisites are GNU Make, LLVM/Clang, Python, CMake,
+Ninja, Git, and Docker Desktop. They are installed through Scoop or already
+available on the system. If `docker info` reports a Linux engine error, restart
+Docker Desktop and make sure its WSL 2 backend is enabled before running the
+commands above.
 
 The build produces `out/PS4ControllerTester.elf` and, when the package tools
 are installed, `out/PS4ControllerTester.pkg`. The package must be installed
@@ -51,6 +56,8 @@ environment before distributing it.
 src/main.c          application loop and controller polling
 src/tester.c        button, trigger, and stick diagnostics
 src/tester.h        diagnostics API
+src/renderer.c      fullscreen SDL2 UI and built-in bitmap font
+src/renderer.h      renderer API
 src/pad_backend.h   OpenOrbis pad adapter boundary
 Makefile            ELF and package targets
 Dockerfile          reproducible OpenOrbis build environment hook
@@ -59,6 +66,6 @@ param.sfo.in        package metadata template
 
 ## Controls
 
-The backend samples all four slots at 60 Hz. Map `ORBIS_PAD_BUTTON_OPTIONS` to
-quit in the renderer/event loop. Missing controllers remain represented by
-empty slots so all four ports can be checked at once.
+The backend samples all four slots at 60 Hz. Hold `Options` on any connected
+controller to quit. Missing controllers remain represented by empty slots so
+all four ports can be checked at once.

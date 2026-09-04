@@ -1,4 +1,5 @@
 #include "pad_backend.h"
+#include "renderer.h"
 #include "tester.h"
 
 #include <orbis/Pad.h>
@@ -54,6 +55,9 @@ int main(void) {
     controller_state_t previous[CONTROLLER_SLOTS] = {0};
     tester_metrics_t metrics[CONTROLLER_SLOTS] = {0};
 
+    if (renderer_open() != 0) {
+        return 1;
+    }
     pad_backend_open();
     for (;;) {
         for (unsigned slot = 0; slot < CONTROLLER_SLOTS; ++slot) {
@@ -61,11 +65,13 @@ int main(void) {
             pad_backend_poll(slot, &states[slot]);
             tester_update(&metrics[slot], &previous[slot], &states[slot]);
         }
-        if (tester_should_quit(states)) {
+        renderer_draw(states, metrics);
+        if (tester_should_quit(states) || renderer_poll_quit()) {
             break;
         }
         sceKernelUsleep(16666);
     }
     pad_backend_close();
+    renderer_close();
     return 0;
 }

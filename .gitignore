@@ -4,3 +4,4 @@ build/
 *.o
 *.pkg
 *.gp4
+third_party/

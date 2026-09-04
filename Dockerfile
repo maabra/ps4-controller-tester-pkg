@@ -1,8 +1,4 @@
-FROM ubuntu:24.04
+FROM openorbisofficial/toolchain:latest
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential ca-certificates git make \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /src
+WORKDIR /workspace
 ENTRYPOINT ["make"]
