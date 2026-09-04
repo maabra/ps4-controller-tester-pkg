@@ -15,7 +15,8 @@ SDL_LIB := $(SDL_ROOT)/lib/libSDL2.a
 CFLAGS := --target=x86_64-pc-freebsd12-elf -fPIC -ffreestanding -fno-builtin \
 		  -DNULL='((void*)0)' \
 		  -I$(SDK)/include -I$(SDL_ROOT)/include -Isrc -O2 -Wall -Wextra -Werror
-LDFLAGS := --sysroot=$(SDK) -L$(SDK)/lib -L$(SDL_ROOT)/lib -pie
+LDFLAGS := --sysroot=$(SDK) -L$(SDK)/lib -L$(SDL_ROOT)/lib -pie \
+		   --script $(SDK)/link.x --eh-frame-hdr
 LDLIBS := -lSDL2 -lScePad -lSceUserService -lSceVideoOut -lSceAudioOut -lSceSysmodule -lkernel -lc
 SOURCES := src/main.c src/tester.c src/renderer.c
 OBJECTS := $(SOURCES:src/%.c=$(OUT)/%.o)
@@ -41,7 +42,7 @@ sdl-check:
 	@test -f "$(SDL_LIB)" || { echo "Missing $(SDL_LIB); build or install SDL2-PS4 before running make"; exit 1; }
 
 $(OUT)/eboot.bin: $(OUT)/PS4ControllerTester.elf
-	$(CREATE_EBOOT) $< $@
+	$(CREATE_EBOOT) -in=$< -out=$@
 
 $(OUT)/param.sfo: param.sfo.in | $(OUT) tools-check
 	$(PKG_TOOL) sfo_new $@
@@ -55,7 +56,7 @@ $(OUT)/param.sfo: param.sfo.in | $(OUT) tools-check
 	$(PKG_TOOL) sfo_setentry $@ VERSION --type Utf8 --maxsize 8 --value 01.00
 
 $(OUT)/PS4ControllerTester.elf: sdl-check $(OBJECTS)
-	$(LD) $(OBJECTS) -o $@ $(LDFLAGS) $(LDLIBS)
+	$(LD) $(OBJECTS) $(SDK)/lib/crt1.o -o $@ $(LDFLAGS) $(LDLIBS)
 
 $(OUT)/PS4ControllerTester.gp4: $(OUT)/eboot.bin $(OUT)/param.sfo
 	$(CREATE_GP4) -out $@ --content-id=IV0000-CTST00001_00-PS4CONTROLLERTEST --files $^
