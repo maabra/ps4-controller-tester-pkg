@@ -13,6 +13,7 @@ PKG_TOOL := $(TOOLCHAIN_BIN)/PkgTool.Core
 SDL_ROOT ?= third_party/SDL-PS4
 SDL_LIB := $(SDL_ROOT)/lib/libSDL2.a
 CFLAGS := --target=x86_64-pc-freebsd12-elf -fPIC -ffreestanding -fno-builtin \
+		  -DNULL='((void*)0)' \
 		  -I$(SDK)/include -I$(SDL_ROOT)/include -Isrc -O2 -Wall -Wextra -Werror
 LDFLAGS := --sysroot=$(SDK) -L$(SDK)/lib -L$(SDL_ROOT)/lib -pie
 LDLIBS := -lSDL2 -lScePad -lSceUserService -lSceVideoOut -lSceSysmodule -lkernel -lc
