@@ -18,8 +18,8 @@ jobs:
           mkdir -p /tmp/sdl2
           curl -fsSL https://github.com/OpenOrbis/SDL-PS4/releases/latest/download/SDL2.tar.gz \
             | tar -xz -C /tmp/sdl2
-          cp -r /tmp/sdl2/include third_party/SDL-PS4/
-          mkdir -p third_party/SDL-PS4/lib
+          mkdir -p third_party/SDL-PS4/include third_party/SDL-PS4/lib
+          cp -r /tmp/sdl2/include/. third_party/SDL-PS4/include/
           find /tmp/sdl2 -name libSDL2.a -exec cp {} third_party/SDL-PS4/lib/ \;
           test -f third_party/SDL-PS4/lib/libSDL2.a
 
