@@ -12,6 +12,7 @@ CREATE_GP4 := $(TOOLCHAIN_BIN)/create-gp4
 PKG_TOOL := $(TOOLCHAIN_BIN)/PkgTool.Core
 SDL_ROOT ?= third_party/SDL-PS4
 SDL_LIB := $(SDL_ROOT)/lib/libSDL2.a
+ICON_SOURCE ?= package-assets/icon0.png
 CFLAGS := --target=x86_64-pc-freebsd12-elf -fPIC -ffreestanding -fno-builtin \
 		  -DNULL='((void*)0)' \
 		  -I$(SDK)/include -I$(SDL_ROOT)/include -Isrc -O2 -Wall -Wextra -Werror
@@ -59,11 +60,15 @@ $(OUT)/sce_sys/param.sfo: param.sfo.in | $(OUT) tools-check
 	$(PKG_TOOL) sfo_setentry $@ TITLE_ID --type Utf8 --maxsize 12 --value CTST00001
 	$(PKG_TOOL) sfo_setentry $@ VERSION --type Utf8 --maxsize 8 --value 01.00
 
+$(OUT)/sce_sys/icon0.png: $(ICON_SOURCE) | $(OUT)
+	mkdir -p $(dir $@)
+	cp $(ICON_SOURCE) $@
+
 $(OUT)/PS4ControllerTester.elf: sdl-check $(OBJECTS)
 	$(LD) $(OBJECTS) $(SDK)/lib/crt1.o -o $@ $(LDFLAGS) $(LDLIBS)
 
-$(OUT)/PS4ControllerTester.gp4: $(OUT)/eboot.bin $(OUT)/sce_sys/param.sfo
-	cd $(OUT) && $(CREATE_GP4) -out PS4ControllerTester.gp4 --content-id=IV0000-CTST00001_00-PS4TESTER0000000 --files "eboot.bin sce_sys/param.sfo"
+$(OUT)/PS4ControllerTester.gp4: $(OUT)/eboot.bin $(OUT)/sce_sys/param.sfo $(OUT)/sce_sys/icon0.png
+	cd $(OUT) && $(CREATE_GP4) -out PS4ControllerTester.gp4 --content-id=IV0000-CTST00001_00-PS4TESTER0000000 --files "eboot.bin sce_sys/param.sfo sce_sys/icon0.png"
 
 pkg: tools-check sdl-check $(OUT)/PS4ControllerTester.gp4
 	$(PKG_TOOL) pkg_build $(OUT)/PS4ControllerTester.gp4 $(OUT)

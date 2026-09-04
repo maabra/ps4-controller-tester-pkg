@@ -25,6 +25,10 @@ jobs:
           test -n "$sdl_library" && test -f "$sdl_library"
           cp -r "$sdl_include"/. third_party/SDL-PS4/include/
           cp "$sdl_library" third_party/SDL-PS4/lib/libSDL2.a
+          mkdir -p package-assets
+          curl -fsSL https://raw.githubusercontent.com/OpenOrbis/OpenOrbis-PS4-Toolchain/master/samples/hello_world/sce_sys/icon0.png \
+            -o package-assets/icon0.png
+          test -s package-assets/icon0.png
 
       - name: Build OpenOrbis packaging tools
         shell: bash
@@ -61,7 +65,7 @@ jobs:
             -w /workspace \
             -v "${GITHUB_WORKSPACE}:/workspace" \
             openorbisofficial/toolchain:latest \
-            sh -c 'pkg=$(find out -maxdepth 1 -name "*.pkg" -print -quit); test -n "$pkg"; PkgTool.Core pkg_validate --verbose "$pkg"; PkgTool.Core pkg_listentries "$pkg"'
+            sh -c 'pkg=$(find out -maxdepth 1 -name "*.pkg" -print -quit); test -n "$pkg"; PkgTool.Core pkg_validate --verbose "$pkg"; PkgTool.Core pkg_listentries "$pkg" | tee /tmp/pkg-entries.txt; grep -q ICON0_PNG /tmp/pkg-entries.txt; grep -q PARAM_SFO /tmp/pkg-entries.txt'
 
       - name: Upload package
         uses: actions/upload-artifact@v4
