@@ -7,7 +7,7 @@ SDK := $(OPENORBIS_ROOT)
 OUT := out
 PLATFORM ?= linux
 TOOLCHAIN_BIN := $(SDK)/bin/$(PLATFORM)
-CREATE_FSELF := $(TOOLCHAIN_BIN)/create-fself
+CREATE_EBOOT := $(TOOLCHAIN_BIN)/create-eboot
 CREATE_GP4 := $(TOOLCHAIN_BIN)/create-gp4
 PKG_TOOL := $(TOOLCHAIN_BIN)/PkgTool.Core
 SDL_ROOT ?= third_party/SDL-PS4
@@ -32,7 +32,7 @@ $(OUT)/%.o: src/%.c | $(OUT)
 tools-check:
 	@test -n "$(SDK)" || { echo "OO_PS4_TOOLCHAIN is not set"; exit 1; }
 	@command -v $(CC) >/dev/null || { echo "Missing $(CC)"; exit 1; }
-	@test -x "$(CREATE_FSELF)" || { echo "Missing $(CREATE_FSELF)"; exit 1; }
+	@test -x "$(CREATE_EBOOT)" || { echo "Missing $(CREATE_EBOOT)"; exit 1; }
 	@test -x "$(CREATE_GP4)" || { echo "Missing $(CREATE_GP4)"; exit 1; }
 	@test -x "$(PKG_TOOL)" || { echo "Missing $(PKG_TOOL)"; exit 1; }
 
@@ -40,7 +40,7 @@ sdl-check:
 	@test -f "$(SDL_LIB)" || { echo "Missing $(SDL_LIB); build or install SDL2-PS4 before running make"; exit 1; }
 
 $(OUT)/eboot.bin: $(OUT)/PS4ControllerTester.elf
-	$(CREATE_FSELF) -in=$< -out=$(OUT)/PS4ControllerTester.oelf --eboot "$@" --paid 0x3800000000000011
+	$(CREATE_EBOOT) $< $@
 
 $(OUT)/param.sfo: param.sfo.in | $(OUT) tools-check
 	$(PKG_TOOL) sfo_new $@
