@@ -13,6 +13,7 @@ PKG_TOOL := $(TOOLCHAIN_BIN)/PkgTool.Core
 SDL_ROOT ?= third_party/SDL-PS4
 SDL_LIB := $(SDL_ROOT)/lib/libSDL2.a
 ICON_SOURCE ?= package-assets/icon0.png
+CONTENT_ID := IV0000-CTST00001_00-PS4TEST000000000
 CFLAGS := --target=x86_64-pc-freebsd12-elf -fPIC -ffreestanding -fno-builtin \
 		  -DNULL='((void*)0)' \
 		  -I$(SDK)/include -I$(SDL_ROOT)/include -Isrc -O2 -Wall -Wextra -Werror
@@ -34,6 +35,7 @@ $(OUT)/%.o: src/%.c | $(OUT)
 
 tools-check:
 	@test -n "$(SDK)" || { echo "OO_PS4_TOOLCHAIN is not set"; exit 1; }
+	@test "$$(printf '%s' '$(CONTENT_ID)' | wc -c)" -eq 36 || { echo "CONTENT_ID must be 36 characters"; exit 1; }
 	@command -v $(CC) >/dev/null || { echo "Missing $(CC)"; exit 1; }
 	@test -x "$(CREATE_EBOOT)" || { echo "Missing $(CREATE_EBOOT)"; exit 1; }
 	@test -x "$(CREATE_GP4)" || { echo "Missing $(CREATE_GP4)"; exit 1; }
@@ -53,7 +55,7 @@ $(OUT)/sce_sys/param.sfo: param.sfo.in | $(OUT) tools-check
 	$(PKG_TOOL) sfo_setentry $@ APP_VER --type Utf8 --maxsize 8 --value 01.00
 	$(PKG_TOOL) sfo_setentry $@ ATTRIBUTE --type Integer --maxsize 4 --value 0
 	$(PKG_TOOL) sfo_setentry $@ CATEGORY --type Utf8 --maxsize 4 --value gd
-	$(PKG_TOOL) sfo_setentry $@ CONTENT_ID --type Utf8 --maxsize 48 --value IV0000-CTST00001_00-PS4TESTER0000000
+	$(PKG_TOOL) sfo_setentry $@ CONTENT_ID --type Utf8 --maxsize 48 --value $(CONTENT_ID)
 	$(PKG_TOOL) sfo_setentry $@ DOWNLOAD_DATA_SIZE --type Integer --maxsize 4 --value 0
 	$(PKG_TOOL) sfo_setentry $@ SYSTEM_VER --type Integer --maxsize 4 --value 0
 	$(PKG_TOOL) sfo_setentry $@ TITLE --type Utf8 --maxsize 128 --value "PS4 Controller Tester"
@@ -68,7 +70,7 @@ $(OUT)/PS4ControllerTester.elf: sdl-check $(OBJECTS)
 	$(LD) $(OBJECTS) $(SDK)/lib/crt1.o -o $@ $(LDFLAGS) $(LDLIBS)
 
 $(OUT)/PS4ControllerTester.gp4: $(OUT)/eboot.bin $(OUT)/sce_sys/param.sfo $(OUT)/sce_sys/icon0.png
-	cd $(OUT) && $(CREATE_GP4) -out PS4ControllerTester.gp4 --content-id=IV0000-CTST00001_00-PS4TESTER0000000 --files "eboot.bin sce_sys/param.sfo sce_sys/icon0.png"
+	cd $(OUT) && $(CREATE_GP4) -out PS4ControllerTester.gp4 --content-id=$(CONTENT_ID) --files "eboot.bin sce_sys/param.sfo sce_sys/icon0.png"
 
 pkg: tools-check sdl-check $(OUT)/PS4ControllerTester.gp4
 	$(PKG_TOOL) pkg_build $(OUT)/PS4ControllerTester.gp4 $(OUT)
