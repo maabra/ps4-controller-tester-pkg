@@ -42,7 +42,7 @@ sdl-check:
 	@test -f "$(SDL_LIB)" || { echo "Missing $(SDL_LIB); build or install SDL2-PS4 before running make"; exit 1; }
 
 $(OUT)/eboot.bin: $(OUT)/PS4ControllerTester.elf
-	$(CREATE_EBOOT) -in=$< -out=$@ -ptype=fake -paid 0x3800000000000011
+	$(CREATE_EBOOT) -in=$< -out=$(OUT)/PS4ControllerTester.oelf --eboot "$@" --paid 0x3800000000000011
 
 
 $(OUT)/sce_sys/param.sfo: param.sfo.in | $(OUT) tools-check
@@ -53,6 +53,8 @@ $(OUT)/sce_sys/param.sfo: param.sfo.in | $(OUT) tools-check
 	$(PKG_TOOL) sfo_setentry $@ ATTRIBUTE --type Integer --maxsize 4 --value 0
 	$(PKG_TOOL) sfo_setentry $@ CATEGORY --type Utf8 --maxsize 4 --value gd
 	$(PKG_TOOL) sfo_setentry $@ CONTENT_ID --type Utf8 --maxsize 48 --value IV0000-CTST00001_00-PS4TESTER0000000
+	$(PKG_TOOL) sfo_setentry $@ DOWNLOAD_DATA_SIZE --type Integer --maxsize 4 --value 0
+	$(PKG_TOOL) sfo_setentry $@ SYSTEM_VER --type Integer --maxsize 4 --value 0
 	$(PKG_TOOL) sfo_setentry $@ TITLE --type Utf8 --maxsize 128 --value "PS4 Controller Tester"
 	$(PKG_TOOL) sfo_setentry $@ TITLE_ID --type Utf8 --maxsize 12 --value CTST00001
 	$(PKG_TOOL) sfo_setentry $@ VERSION --type Utf8 --maxsize 8 --value 01.00
