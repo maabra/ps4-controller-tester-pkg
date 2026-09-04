@@ -43,9 +43,10 @@ jobs:
             -v "${GITHUB_WORKSPACE}:/workspace" \
             -v /tmp/create-gp4:/lib/OpenOrbisSDK/bin/linux/create-gp4:ro \
             openorbisofficial/toolchain:latest make pkg
+          find out -maxdepth 1 -type f -printf '%f\n'
 
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:
           name: PS4ControllerTester
-          path: out/PS4ControllerTester.pkg
+          path: out/*.pkg
