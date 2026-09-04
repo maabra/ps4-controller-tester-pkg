@@ -44,7 +44,9 @@ sdl-check:
 $(OUT)/eboot.bin: $(OUT)/PS4ControllerTester.elf
 	$(CREATE_EBOOT) -in=$< -out=$@
 
-$(OUT)/param.sfo: param.sfo.in | $(OUT) tools-check
+
+$(OUT)/sce_sys/param.sfo: param.sfo.in | $(OUT) tools-check
+	mkdir -p $(dir $@)
 	$(PKG_TOOL) sfo_new $@
 	$(PKG_TOOL) sfo_setentry $@ APP_TYPE --type Integer --maxsize 4 --value 1
 	$(PKG_TOOL) sfo_setentry $@ APP_VER --type Utf8 --maxsize 8 --value 01.00
@@ -58,8 +60,8 @@ $(OUT)/param.sfo: param.sfo.in | $(OUT) tools-check
 $(OUT)/PS4ControllerTester.elf: sdl-check $(OBJECTS)
 	$(LD) $(OBJECTS) $(SDK)/lib/crt1.o -o $@ $(LDFLAGS) $(LDLIBS)
 
-$(OUT)/PS4ControllerTester.gp4: $(OUT)/eboot.bin $(OUT)/param.sfo
-	cd $(OUT) && $(CREATE_GP4) -out PS4ControllerTester.gp4 --content-id=IV0000-CTST00001_00-PS4TESTER0000000 --files eboot.bin param.sfo
+$(OUT)/PS4ControllerTester.gp4: $(OUT)/eboot.bin $(OUT)/sce_sys/param.sfo
+	cd $(OUT) && $(CREATE_GP4) -out PS4ControllerTester.gp4 --content-id=IV0000-CTST00001_00-PS4TESTER0000000 --files eboot.bin sce_sys/param.sfo
 
 pkg: tools-check sdl-check $(OUT)/PS4ControllerTester.gp4
 	$(PKG_TOOL) pkg_build $(OUT)/PS4ControllerTester.gp4 $(OUT)
