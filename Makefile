@@ -16,7 +16,7 @@ CFLAGS := --target=x86_64-pc-freebsd12-elf -fPIC -ffreestanding -fno-builtin \
 		  -DNULL='((void*)0)' \
 		  -I$(SDK)/include -I$(SDL_ROOT)/include -Isrc -O2 -Wall -Wextra -Werror
 LDFLAGS := --sysroot=$(SDK) -L$(SDK)/lib -L$(SDL_ROOT)/lib -pie
-LDLIBS := -lSDL2 -lScePad -lSceUserService -lSceVideoOut -lSceSysmodule -lkernel -lc
+LDLIBS := -lSDL2 -lScePad -lSceUserService -lSceVideoOut -lSceAudioOut -lSceSysmodule -lkernel -lc
 SOURCES := src/main.c src/tester.c src/renderer.c
 OBJECTS := $(SOURCES:src/%.c=$(OUT)/%.o)
 
