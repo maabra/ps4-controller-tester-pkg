@@ -2,7 +2,6 @@
 
 #include <SDL.h>
 #include <orbis/Pad.h>
-#include <stddef.h>
 
 #define UI_WIDTH 1280
 #define UI_HEIGHT 720
@@ -81,9 +80,9 @@ int renderer_open(void) {
     window = SDL_CreateWindow("PS4 Controller Tester", SDL_WINDOWPOS_CENTERED,
                               SDL_WINDOWPOS_CENTERED, UI_WIDTH, UI_HEIGHT,
                               SDL_WINDOW_FULLSCREEN);
-    if (window == NULL) return -1;
+    if (window == 0) return -1;
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
-    if (renderer == NULL) return -1;
+    if (renderer == 0) return -1;
     SDL_RenderSetLogicalSize(renderer, UI_WIDTH, UI_HEIGHT);
     return 0;
 }
@@ -153,7 +152,7 @@ int renderer_poll_quit(void) {
 }
 
 void renderer_close(void) {
-    if (renderer != NULL) SDL_DestroyRenderer(renderer);
-    if (window != NULL) SDL_DestroyWindow(window);
+    if (renderer != 0) SDL_DestroyRenderer(renderer);
+    if (window != 0) SDL_DestroyWindow(window);
     SDL_Quit();
 }
