@@ -49,7 +49,7 @@ jobs:
             -v /tmp/create-fself:/lib/OpenOrbisSDK/bin/linux/create-eboot:ro \
             -v /tmp/create-gp4:/lib/OpenOrbisSDK/bin/linux/create-gp4:ro \
             openorbisofficial/toolchain:latest make pkg
-          find out -maxdepth 1 -type f -printf '%f\n'
+          ls -lh *.pkg
 
       - name: Validate package
         run: |
@@ -58,10 +58,10 @@ jobs:
             -w /workspace \
             -v "${GITHUB_WORKSPACE}:/workspace" \
             openorbisofficial/toolchain:latest \
-            sh -c 'pkg=$(find out -maxdepth 1 -name "*.pkg" -print -quit); test -n "$pkg"; PkgTool.Core pkg_validate --verbose "$pkg"; PkgTool.Core pkg_listentries "$pkg" | tee /tmp/pkg-entries.txt; grep -q ICON0_PNG /tmp/pkg-entries.txt; grep -q PARAM_SFO /tmp/pkg-entries.txt'
+            sh -c 'pkg=$(find . -maxdepth 1 -name "*.pkg" -print -quit); test -n "$pkg"; PkgTool.Core pkg_validate --verbose "$pkg"; PkgTool.Core pkg_listentries "$pkg" | tee /tmp/pkg-entries.txt; grep -q ICON0_PNG /tmp/pkg-entries.txt; grep -q PARAM_SFO /tmp/pkg-entries.txt'
 
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:
           name: PS4HelloWorld
-          path: out/*.pkg
+          path: "*.pkg"
