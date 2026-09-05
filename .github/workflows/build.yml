@@ -45,6 +45,7 @@ jobs:
             --user root \
             -w /workspace \
             -v "${GITHUB_WORKSPACE}:/workspace" \
+            -v /tmp/create-fself:/lib/OpenOrbisSDK/bin/linux/create-fself:ro \
             -v /tmp/create-fself:/lib/OpenOrbisSDK/bin/linux/create-eboot:ro \
             -v /tmp/create-gp4:/lib/OpenOrbisSDK/bin/linux/create-gp4:ro \
             openorbisofficial/toolchain:latest make pkg

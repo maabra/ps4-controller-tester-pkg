@@ -1,23 +1,25 @@
 SHELL := /bin/sh
 
 OPENORBIS_ROOT ?= $(OO_PS4_TOOLCHAIN)
-CC := clang
-LD := ld.lld
 SDK := $(OPENORBIS_ROOT)
 OUT := out
 PLATFORM ?= linux
 TOOLCHAIN_BIN := $(SDK)/bin/$(PLATFORM)
-CREATE_EBOOT := $(TOOLCHAIN_BIN)/create-eboot
+
+CC := clang
+LD := ld.lld
+CREATE_FSELF := $(TOOLCHAIN_BIN)/create-fself
 CREATE_GP4 := $(TOOLCHAIN_BIN)/create-gp4
 PKG_TOOL := $(TOOLCHAIN_BIN)/PkgTool.Core
 ICON_SOURCE ?= package-assets/icon0.png
+
 CONTENT_ID := IV0000-HELO00001_00-HELLOWORLD000000
 TITLE := PS4 Hello World
 TITLE_ID := HELO00001
 VERSION := 01.00
 
-CFLAGS := --target=x86_64-pc-freebsd12-elf -fPIC -ffreestanding -fno-builtin \
-		  -isysroot $(SDK) -I$(SDK)/include -Isrc -O2 -Wall -Wextra
+CFLAGS := --target=x86_64-pc-freebsd12-elf -fPIC -funwind-tables -c \
+		  -isysroot $(SDK) -isystem $(SDK)/include -Isrc -O2 -Wall -Wextra
 LDFLAGS := -m elf_x86_64 -pie --script $(SDK)/link.x --eh-frame-hdr \
 		   -L$(SDK)/lib
 LDLIBS := -lSceVideoOut -lScePad -lSceUserService -lkernel -lc
@@ -29,16 +31,16 @@ OBJECTS := $(SOURCES:src/%.c=$(OUT)/%.o)
 all: $(OUT)/eboot.bin
 
 $(OUT):
-	mkdir -p $(OUT)
+	mkdir -p $(OUT) $(OUT)/sce_sys
 
 $(OUT)/%.o: src/%.c | $(OUT)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 
 tools-check:
 	@test -n "$(SDK)" || { echo "OO_PS4_TOOLCHAIN is not set"; exit 1; }
 	@test "$$(printf '%s' '$(CONTENT_ID)' | wc -c)" -eq 36 || { echo "CONTENT_ID must be 36 characters"; exit 1; }
 	@command -v $(CC) >/dev/null || { echo "Missing $(CC)"; exit 1; }
-	@test -x "$(CREATE_EBOOT)" || { echo "Missing $(CREATE_EBOOT)"; exit 1; }
+	@test -x "$(CREATE_FSELF)" || test -x "$(TOOLCHAIN_BIN)/create-eboot" || { echo "Missing create-fself"; exit 1; }
 	@test -x "$(CREATE_GP4)" || { echo "Missing $(CREATE_GP4)"; exit 1; }
 	@test -x "$(PKG_TOOL)" || { echo "Missing $(PKG_TOOL)"; exit 1; }
 
@@ -46,7 +48,12 @@ $(OUT)/PS4HelloWorld.elf: $(OBJECTS)
 	$(LD) $(OBJECTS) $(SDK)/lib/crt1.o -o $@ $(LDFLAGS) $(LDLIBS)
 
 $(OUT)/eboot.bin: $(OUT)/PS4HelloWorld.elf
-	$(CREATE_EBOOT) -in=$< -out=$(OUT)/PS4HelloWorld.oelf --eboot "$@" --paid 0x3800000000000011
+	if [ -x "$(CREATE_FSELF)" ]; then \
+		$(CREATE_FSELF) -in "$<" --out "$(OUT)/PS4HelloWorld.oelf" --eboot "$@" --paid 0x3800000000000011 || \
+		$(CREATE_FSELF) "$<" "$@" --paid 0x3800000000000011; \
+	elif [ -x "$(TOOLCHAIN_BIN)/create-eboot" ]; then \
+		$(TOOLCHAIN_BIN)/create-eboot "$<" "$@"; \
+	fi
 
 $(OUT)/sce_sys/param.sfo: param.sfo.in | $(OUT) tools-check
 	mkdir -p $(dir $@)
