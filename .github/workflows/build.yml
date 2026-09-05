@@ -12,22 +12,14 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
-      - name: Download SDL2-PS4
+      - name: Setup package assets
         shell: bash
         run: |
-          mkdir -p /tmp/sdl2
-          curl -fsSL https://github.com/OpenOrbis/SDL-PS4/releases/latest/download/SDL2.tar.gz \
-            | tar -xz -C /tmp/sdl2
-          mkdir -p third_party/SDL-PS4/include third_party/SDL-PS4/lib
-          sdl_include=$(dirname "$(find /tmp/sdl2 -type f -name SDL.h -print -quit)")
-          sdl_library=$(find /tmp/sdl2 -type f -name libSDL2.a -print -quit)
-          test -n "$sdl_include" && test -f "$sdl_include/SDL.h"
-          test -n "$sdl_library" && test -f "$sdl_library"
-          cp -r "$sdl_include"/. third_party/SDL-PS4/include/
-          cp "$sdl_library" third_party/SDL-PS4/lib/libSDL2.a
           mkdir -p package-assets
-          curl -fsSL https://raw.githubusercontent.com/OpenOrbis/OpenOrbis-PS4-Toolchain/master/samples/hello_world/sce_sys/icon0.png \
-            -o package-assets/icon0.png
+          if [ ! -f package-assets/icon0.png ]; then
+            curl -fsSL https://raw.githubusercontent.com/OpenOrbis/OpenOrbis-PS4-Toolchain/master/samples/hello_world/sce_sys/icon0.png \
+              -o package-assets/icon0.png
+          fi
           test -s package-assets/icon0.png
 
       - name: Build OpenOrbis packaging tools
@@ -70,5 +62,5 @@ jobs:
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:
-          name: PS4ControllerTester
+          name: PS4HelloWorld
           path: out/*.pkg

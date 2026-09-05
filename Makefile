@@ -10,22 +10,23 @@ TOOLCHAIN_BIN := $(SDK)/bin/$(PLATFORM)
 CREATE_EBOOT := $(TOOLCHAIN_BIN)/create-eboot
 CREATE_GP4 := $(TOOLCHAIN_BIN)/create-gp4
 PKG_TOOL := $(TOOLCHAIN_BIN)/PkgTool.Core
-SDL_ROOT ?= third_party/SDL-PS4
-SDL_LIB := $(SDL_ROOT)/lib/libSDL2.a
 ICON_SOURCE ?= package-assets/icon0.png
-CONTENT_ID := IV0000-CTST00001_00-PS4TEST000000000
+CONTENT_ID := IV0000-HELO00001_00-HELLOWORLD000000
+TITLE := PS4 Hello World
+TITLE_ID := HELO00001
+VERSION := 01.00
+
 CFLAGS := --target=x86_64-pc-freebsd12-elf -fPIC -ffreestanding -fno-builtin \
-		  -DNULL='((void*)0)' \
-		  -I$(SDK)/include -I$(SDL_ROOT)/include -Isrc -O2 -Wall -Wextra -Werror
-LDFLAGS := --sysroot=$(SDK) -L$(SDK)/lib -L$(SDL_ROOT)/lib -pie \
-		   --script $(SDK)/link.x --eh-frame-hdr
-LDLIBS := -lSDL2 -lScePad -lSceUserService -lSceVideoOut -lSceAudioOut -lSceSysmodule -lkernel -lc
-SOURCES := src/main.c src/tester.c src/renderer.c
+		  -isysroot $(SDK) -I$(SDK)/include -Isrc -O2 -Wall -Wextra
+LDFLAGS := -m elf_x86_64 -pie --script $(SDK)/link.x --eh-frame-hdr \
+		   -L$(SDK)/lib
+LDLIBS := -lSceVideoOut -lScePad -lSceUserService -lkernel -lc
+SOURCES := src/main.c
 OBJECTS := $(SOURCES:src/%.c=$(OUT)/%.o)
 
-.PHONY: all clean pkg tools-check sdl-check
+.PHONY: all clean pkg tools-check
 
-all: $(OUT)/PS4ControllerTester.elf
+all: $(OUT)/eboot.bin
 
 $(OUT):
 	mkdir -p $(OUT)
@@ -41,39 +42,35 @@ tools-check:
 	@test -x "$(CREATE_GP4)" || { echo "Missing $(CREATE_GP4)"; exit 1; }
 	@test -x "$(PKG_TOOL)" || { echo "Missing $(PKG_TOOL)"; exit 1; }
 
-sdl-check:
-	@test -f "$(SDL_LIB)" || { echo "Missing $(SDL_LIB); build or install SDL2-PS4 before running make"; exit 1; }
+$(OUT)/PS4HelloWorld.elf: $(OBJECTS)
+	$(LD) $(OBJECTS) $(SDK)/lib/crt1.o -o $@ $(LDFLAGS) $(LDLIBS)
 
-$(OUT)/eboot.bin: $(OUT)/PS4ControllerTester.elf
-	$(CREATE_EBOOT) -in=$< -out=$(OUT)/PS4ControllerTester.oelf --eboot "$@" --paid 0x3800000000000011
-
+$(OUT)/eboot.bin: $(OUT)/PS4HelloWorld.elf
+	$(CREATE_EBOOT) -in=$< -out=$(OUT)/PS4HelloWorld.oelf --eboot "$@" --paid 0x3800000000000011
 
 $(OUT)/sce_sys/param.sfo: param.sfo.in | $(OUT) tools-check
 	mkdir -p $(dir $@)
 	$(PKG_TOOL) sfo_new $@
 	$(PKG_TOOL) sfo_setentry $@ APP_TYPE --type Integer --maxsize 4 --value 1
-	$(PKG_TOOL) sfo_setentry $@ APP_VER --type Utf8 --maxsize 8 --value 01.00
+	$(PKG_TOOL) sfo_setentry $@ APP_VER --type Utf8 --maxsize 8 --value $(VERSION)
 	$(PKG_TOOL) sfo_setentry $@ ATTRIBUTE --type Integer --maxsize 4 --value 0
 	$(PKG_TOOL) sfo_setentry $@ CATEGORY --type Utf8 --maxsize 4 --value gd
 	$(PKG_TOOL) sfo_setentry $@ CONTENT_ID --type Utf8 --maxsize 48 --value $(CONTENT_ID)
 	$(PKG_TOOL) sfo_setentry $@ DOWNLOAD_DATA_SIZE --type Integer --maxsize 4 --value 0
 	$(PKG_TOOL) sfo_setentry $@ SYSTEM_VER --type Integer --maxsize 4 --value 0
-	$(PKG_TOOL) sfo_setentry $@ TITLE --type Utf8 --maxsize 128 --value "PS4 Controller Tester"
-	$(PKG_TOOL) sfo_setentry $@ TITLE_ID --type Utf8 --maxsize 12 --value CTST00001
-	$(PKG_TOOL) sfo_setentry $@ VERSION --type Utf8 --maxsize 8 --value 01.00
+	$(PKG_TOOL) sfo_setentry $@ TITLE --type Utf8 --maxsize 128 --value "$(TITLE)"
+	$(PKG_TOOL) sfo_setentry $@ TITLE_ID --type Utf8 --maxsize 12 --value $(TITLE_ID)
+	$(PKG_TOOL) sfo_setentry $@ VERSION --type Utf8 --maxsize 8 --value $(VERSION)
 
 $(OUT)/sce_sys/icon0.png: $(ICON_SOURCE) | $(OUT)
 	mkdir -p $(dir $@)
 	cp $(ICON_SOURCE) $@
 
-$(OUT)/PS4ControllerTester.elf: sdl-check $(OBJECTS)
-	$(LD) $(OBJECTS) $(SDK)/lib/crt1.o -o $@ $(LDFLAGS) $(LDLIBS)
+$(OUT)/PS4HelloWorld.gp4: $(OUT)/eboot.bin $(OUT)/sce_sys/param.sfo $(OUT)/sce_sys/icon0.png
+	cd $(OUT) && $(CREATE_GP4) -out PS4HelloWorld.gp4 --content-id=$(CONTENT_ID) --files "eboot.bin sce_sys/param.sfo sce_sys/icon0.png"
 
-$(OUT)/PS4ControllerTester.gp4: $(OUT)/eboot.bin $(OUT)/sce_sys/param.sfo $(OUT)/sce_sys/icon0.png
-	cd $(OUT) && $(CREATE_GP4) -out PS4ControllerTester.gp4 --content-id=$(CONTENT_ID) --files "eboot.bin sce_sys/param.sfo sce_sys/icon0.png"
-
-pkg: tools-check sdl-check $(OUT)/PS4ControllerTester.gp4
-	$(PKG_TOOL) pkg_build $(OUT)/PS4ControllerTester.gp4 $(OUT)
+pkg: tools-check $(OUT)/PS4HelloWorld.gp4
+	$(PKG_TOOL) pkg_build $(OUT)/PS4HelloWorld.gp4 $(OUT)
 
 clean:
 	rm -rf $(OUT)
