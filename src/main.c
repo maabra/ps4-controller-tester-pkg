@@ -1,12 +1,5 @@
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
-#include <orbis/CommonDialog.h>
-#include <orbis/MsgDialog.h>
-#include <orbis/Sysmodule.h>
 #include <orbis/libkernel.h>
 #include <orbis/VideoOut.h>
 #include <orbis/UserService.h>
@@ -17,53 +10,6 @@
 #define SCREEN_DEPTH  4
 #define FRAME_BUFFER_SIZE (SCREEN_WIDTH * SCREEN_HEIGHT * SCREEN_DEPTH)
 #define NUM_BUFFERS   2
-
-/* Dialog Helper Functions (Native PS4 System Message Box) */
-static inline void _orbisCommonDialogSetMagicNumber(uint32_t *magic, const OrbisCommonDialogBaseParam *param) {
-    *magic = (uint32_t)(ORBIS_COMMON_DIALOG_MAGIC_NUMBER + (uint64_t)param);
-}
-
-static inline void _orbisCommonDialogBaseParamInit(OrbisCommonDialogBaseParam *param) {
-    memset(param, 0, sizeof(OrbisCommonDialogBaseParam));
-    param->size = (uint32_t)sizeof(OrbisCommonDialogBaseParam);
-    _orbisCommonDialogSetMagicNumber(&(param->magic), param);
-}
-
-static inline void orbisMsgDialogParamInitialize(OrbisMsgDialogParam *param) {
-    memset(param, 0, sizeof(OrbisMsgDialogParam));
-    _orbisCommonDialogBaseParamInit(&param->baseParam);
-    param->size = sizeof(OrbisMsgDialogParam);
-}
-
-static void show_system_dialog(const char *message) {
-    OrbisMsgDialogParam param;
-    OrbisMsgDialogUserMessageParam userMsgParam;
-    OrbisMsgDialogResult result;
-
-    if (sceSysmoduleLoadModule(ORBIS_SYSMODULE_MESSAGE_DIALOG) < 0 ||
-        sceCommonDialogInitialize() < 0) {
-        return;
-    }
-
-    sceMsgDialogInitialize();
-    orbisMsgDialogParamInitialize(&param);
-    param.mode = ORBIS_MSG_DIALOG_MODE_USER_MSG;
-
-    memset(&userMsgParam, 0, sizeof(userMsgParam));
-    userMsgParam.msg = message;
-    userMsgParam.buttonType = ORBIS_MSG_DIALOG_BUTTON_TYPE_OK;
-    param.userMsgParam = &userMsgParam;
-
-    if (sceMsgDialogOpen(&param) >= 0) {
-        while (sceMsgDialogUpdateStatus() != ORBIS_COMMON_DIALOG_STATUS_FINISHED) {
-            sceKernelUsleep(16666);
-        }
-        sceMsgDialogClose();
-        memset(&result, 0, sizeof(result));
-        sceMsgDialogGetResult(&result);
-        sceMsgDialogTerminate();
-    }
-}
 
 /* Standard 8x8 font bitmap (ASCII 32 to 126) */
 static const uint8_t font8x8_basic[95][8] = {
@@ -318,10 +264,7 @@ static void u32_to_str(uint32_t val, char *buf) {
 }
 
 int main(void) {
-    /* 1. Show native PS4 system dialog */
-    show_system_dialog("Hello World!\n\nOpenOrbis homebrew is running successfully on your PlayStation 4.\n\nPress OK to enter diagnostics screen.");
-
-    /* 2. Initialize User Service & Controller */
+    /* 1. Initialize User Service & Controller */
     int user_id = -1;
     int pad_handle = -1;
 

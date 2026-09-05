@@ -5,7 +5,7 @@ TITLE_ID    := HELO00001
 CONTENT_ID  := IV0000-HELO00001_00-HELLOWORLD000000
 
 # Libraries linked into the ELF
-LIBS        := -lc -lkernel -lSceMsgDialog -lSceCommonDialog -lSceSysmodule -lSceVideoOut -lScePad -lSceUserService
+LIBS        := -lc -lkernel -lSceVideoOut -lScePad -lSceUserService
 
 # Root vars
 TOOLCHAIN   := $(OO_PS4_TOOLCHAIN)
